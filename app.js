@@ -38,6 +38,11 @@ class PlannerApp {
     this.requestNotificationPermission();
     this.startReminders();
 
+    // Setup auth UI (always, independent of Supabase)
+    this.setupAuthModal();
+    this.setupUpgradeModal();
+    this.setupAuthButton();
+
     // Initialize Supabase auth + cloud sync
     this.initSupabase();
   }
@@ -46,6 +51,21 @@ class PlannerApp {
   //  SUPABASE / AUTH / PRO
   // ============================================
 
+  setupAuthButton() {
+    const authBtn = document.getElementById("authBtn");
+    if (!authBtn) return;
+    authBtn.addEventListener("click", () => {
+      if (auth.isLoggedIn()) {
+        if (confirm("Sign out?")) {
+          auth.signOut();
+          this.updateAuthUI(null, null);
+        }
+      } else {
+        this.openAuthModal();
+      }
+    });
+  }
+
   initSupabase() {
     if (
       typeof CONFIG === "undefined" ||
@@ -53,35 +73,20 @@ class PlannerApp {
       CONFIG.supabaseUrl === "YOUR_SUPABASE_URL"
     ) return;
 
-    const supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
-    auth.init(supabaseClient);
-    sync.init(supabaseClient);
+    try {
+      const supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+      auth.init(supabaseClient);
+      sync.init(supabaseClient);
 
-    auth.onChange(async (user, profile) => {
-      this.updateAuthUI(user, profile);
-      if (user && auth.isPro()) {
-        await this.syncFromCloud();
-      }
-    });
-
-    // Wire up auth button
-    const authBtn = document.getElementById("authBtn");
-    if (authBtn) {
-      authBtn.addEventListener("click", () => {
-        if (auth.isLoggedIn()) {
-          if (confirm("Sign out?")) {
-            auth.signOut().then(() => {
-              this.updateAuthUI(null, null);
-            });
-          }
-        } else {
-          this.openAuthModal();
+      auth.onChange(async (user, profile) => {
+        this.updateAuthUI(user, profile);
+        if (user && auth.isPro()) {
+          await this.syncFromCloud();
         }
       });
+    } catch (e) {
+      console.error("Supabase init error:", e);
     }
-
-    this.setupAuthModal();
-    this.setupUpgradeModal();
   }
 
   updateAuthUI(user, profile) {
