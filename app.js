@@ -190,11 +190,6 @@ class PlannerApp {
           await auth.signIn(email, password);
         } else {
           await auth.signUp(email, password);
-          errorEl.textContent = "Check your email to confirm your account!";
-          errorEl.style.color = "var(--success-color)";
-          errorEl.classList.add("visible");
-          submitBtn.disabled = false;
-          return;
         }
         modal.classList.remove("active");
       } catch (err) {
