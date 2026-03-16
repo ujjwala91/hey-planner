@@ -188,10 +188,17 @@ class PlannerApp {
       try {
         if (mode === "signin") {
           await auth.signIn(email, password);
+          modal.classList.remove("active");
         } else {
           await auth.signUp(email, password);
+          // Show confirmation message — user must click link in email
+          errorEl.textContent = "✅ Check your email and click the confirmation link to activate your account.";
+          errorEl.style.color = "var(--success-color)";
+          errorEl.classList.add("visible");
+          submitBtn.textContent = "Email sent!";
+          submitBtn.disabled = true;
+          return;
         }
-        modal.classList.remove("active");
       } catch (err) {
         errorEl.textContent = err.message;
         errorEl.style.color = "var(--danger-color)";
