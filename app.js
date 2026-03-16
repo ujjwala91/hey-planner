@@ -69,7 +69,11 @@ class PlannerApp {
     if (authBtn) {
       authBtn.addEventListener("click", () => {
         if (auth.isLoggedIn()) {
-          if (confirm("Sign out?")) auth.signOut();
+          if (confirm("Sign out?")) {
+            auth.signOut().then(() => {
+              this.updateAuthUI(null, null);
+            });
+          }
         } else {
           this.openAuthModal();
         }
@@ -78,9 +82,6 @@ class PlannerApp {
 
     this.setupAuthModal();
     this.setupUpgradeModal();
-
-    // Force UI update after session loads (handles page refresh case)
-    setTimeout(() => this.updateAuthUI(auth.user, auth.profile), 800);
   }
 
   updateAuthUI(user, profile) {
