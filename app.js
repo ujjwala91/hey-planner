@@ -37,6 +37,201 @@ class PlannerApp {
     // Start reminder notifications
     this.requestNotificationPermission();
     this.startReminders();
+
+    // Initialize Supabase auth + cloud sync
+    this.initSupabase();
+  }
+
+  // ============================================
+  //  SUPABASE / AUTH / PRO
+  // ============================================
+
+  initSupabase() {
+    if (
+      typeof CONFIG === "undefined" ||
+      !CONFIG.supabaseUrl ||
+      CONFIG.supabaseUrl === "YOUR_SUPABASE_URL"
+    ) return;
+
+    const supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+    auth.init(supabaseClient);
+    sync.init(supabaseClient);
+
+    auth.onChange(async (user, profile) => {
+      this.updateAuthUI(user, profile);
+      if (user && auth.isPro()) {
+        await this.syncFromCloud();
+      }
+    });
+
+    // Wire up auth button
+    const authBtn = document.getElementById("authBtn");
+    if (authBtn) {
+      authBtn.addEventListener("click", () => {
+        if (auth.isLoggedIn()) {
+          if (confirm("Sign out?")) auth.signOut();
+        } else {
+          this.openAuthModal();
+        }
+      });
+    }
+
+    this.setupAuthModal();
+    this.setupUpgradeModal();
+  }
+
+  updateAuthUI(user, profile) {
+    const btn = document.getElementById("authBtn");
+    if (!btn) return;
+    if (user) {
+      const isPro = auth.isPro();
+      const onTrial = auth.isOnTrial();
+      btn.textContent = isPro && !onTrial ? "⭐ Pro" : "👤 " + user.email.split("@")[0];
+      btn.classList.toggle("is-pro", isPro && !onTrial);
+    } else {
+      btn.textContent = "Sign In";
+      btn.classList.remove("is-pro");
+    }
+    this.updateTrialBanner();
+  }
+
+  updateTrialBanner() {
+    const banner = document.getElementById("trialBanner");
+    const bannerText = document.getElementById("trialBannerText");
+    if (!banner) return;
+
+    if (auth.isLoggedIn() && auth.isOnTrial()) {
+      const days = auth.trialDaysLeft();
+      bannerText.textContent = days <= 1
+        ? "⚠️ Your free trial expires today — upgrade to keep Pro features!"
+        : `🎉 ${days} days left in your free trial`;
+      banner.style.display = "flex";
+    } else {
+      banner.style.display = "none";
+    }
+
+    // Wire up trial banner buttons (once)
+    const upgradeBtn = document.getElementById("trialUpgradeBtn");
+    const closeBtn = document.getElementById("trialBannerClose");
+    if (upgradeBtn && !upgradeBtn._wired) {
+      upgradeBtn._wired = true;
+      upgradeBtn.addEventListener("click", () => this.showUpgradeModal());
+    }
+    if (closeBtn && !closeBtn._wired) {
+      closeBtn._wired = true;
+      closeBtn.addEventListener("click", () => banner.style.display = "none");
+    }
+  }
+
+  async syncFromCloud() {
+    try {
+      const cloudData = await sync.pullAll();
+      if (!cloudData) return;
+      if (cloudData.tasks.length > 0 || cloudData.lists.length > 0) {
+        storage.replaceData(cloudData);
+      } else {
+        await sync.pushAll(storage.getRawData());
+      }
+      this.renderSidebar();
+      this.refreshCurrentView();
+      this.updateProgress();
+    } catch (e) {
+      console.error("Cloud sync error:", e);
+    }
+  }
+
+  openAuthModal() {
+    document.getElementById("authModal").classList.add("active");
+    document.getElementById("authEmail").value = "";
+    document.getElementById("authPassword").value = "";
+    document.getElementById("authError").classList.remove("visible");
+  }
+
+  setupAuthModal() {
+    const modal = document.getElementById("authModal");
+    if (!modal) return;
+
+    const closeBtn = modal.querySelector(".close-btn");
+    const cancelBtn = document.getElementById("cancelAuthBtn");
+    const submitBtn = document.getElementById("submitAuthBtn");
+    const tabs = modal.querySelectorAll(".auth-tab");
+    const errorEl = document.getElementById("authError");
+    const signupNote = document.getElementById("authSignupNote");
+    let mode = "signin";
+
+    closeBtn.addEventListener("click", () => modal.classList.remove("active"));
+    cancelBtn.addEventListener("click", () => modal.classList.remove("active"));
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        mode = tab.dataset.tab;
+        submitBtn.textContent = mode === "signin" ? "Sign In" : "Create Account";
+        signupNote.style.display = mode === "signup" ? "block" : "none";
+        errorEl.classList.remove("visible");
+      });
+    });
+
+    submitBtn.addEventListener("click", async () => {
+      const email = document.getElementById("authEmail").value.trim();
+      const password = document.getElementById("authPassword").value;
+      errorEl.classList.remove("visible");
+
+      if (!email || !password) {
+        errorEl.textContent = "Please enter your email and password.";
+        errorEl.classList.add("visible");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      try {
+        if (mode === "signin") {
+          await auth.signIn(email, password);
+        } else {
+          await auth.signUp(email, password);
+          errorEl.textContent = "Check your email to confirm your account!";
+          errorEl.style.color = "var(--success-color)";
+          errorEl.classList.add("visible");
+          submitBtn.disabled = false;
+          return;
+        }
+        modal.classList.remove("active");
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.color = "var(--danger-color)";
+        errorEl.classList.add("visible");
+      }
+      submitBtn.disabled = false;
+    });
+  }
+
+  showUpgradeModal() {
+    const modal = document.getElementById("upgradeModal");
+    if (!modal) return;
+    const priceEl = document.getElementById("upgradePrice");
+    if (priceEl && typeof CONFIG !== "undefined") {
+      priceEl.innerHTML = CONFIG.proPrice + ' <span>/month</span>';
+    }
+    modal.classList.add("active");
+  }
+
+  setupUpgradeModal() {
+    const modal = document.getElementById("upgradeModal");
+    if (!modal) return;
+
+    modal.querySelector(".close-btn").addEventListener("click", () => modal.classList.remove("active"));
+    document.getElementById("cancelUpgradeBtn").addEventListener("click", () => modal.classList.remove("active"));
+
+    document.getElementById("upgradeBtn").addEventListener("click", () => {
+      if (typeof CONFIG === "undefined" || !CONFIG.stripePaymentLink || CONFIG.stripePaymentLink === "YOUR_STRIPE_PAYMENT_LINK") {
+        alert("Stripe payment link not configured yet.");
+        return;
+      }
+      const userId = auth.user?.id ?? "";
+      const url = CONFIG.stripePaymentLink + (userId ? `?client_reference_id=${userId}` : "");
+      window.open(url, "_blank");
+    });
   }
 
   // Ensure a built-in "Reminders" section exists
@@ -1989,6 +2184,15 @@ class PlannerApp {
 
   // Open list modal
   openListModal() {
+    // Free tier: max 3 custom lists (excluding built-in Reminders)
+    const userLists = storage.getAllLists().filter(
+      l => !(l.name === "Reminders" && l.icon === "🔔")
+    );
+    const limit = typeof CONFIG !== "undefined" ? CONFIG.freeListLimit : 3;
+    if (!auth.isPro() && userLists.length >= limit) {
+      this.showUpgradeModal();
+      return;
+    }
     const modal = document.getElementById("listModal");
     modal.classList.add("active");
     document.getElementById("listName").focus();

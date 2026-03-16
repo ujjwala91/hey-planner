@@ -7,15 +7,24 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#667eea">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
     <div class="app-container">
+        <!-- Trial Banner -->
+        <div id="trialBanner" class="trial-banner" style="display:none">
+            <span id="trialBannerText">🎉 7 days left in your free trial</span>
+            <button id="trialUpgradeBtn" class="trial-upgrade-btn">Upgrade to Pro — ₹99/month</button>
+            <button id="trialBannerClose" class="trial-close-btn">&times;</button>
+        </div>
+
         <!-- Header -->
         <header class="header">
             <div class="logo">
                 <h1>📝 My Planner</h1>
             </div>
             <div class="header-controls">
+                <button id="authBtn" class="btn-auth">Sign In</button>
                 <button id="settingsBtn" class="btn-settings" title="Settings">⚙️</button>
                 <div class="date-display">
                     <span id="currentDate"></span>
@@ -305,11 +314,62 @@
         <div id="interimText" class="interim-text"></div>
     </div>
 
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="authModalTitle">Sign In</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-tab="signin">Sign In</button>
+                    <button class="auth-tab" data-tab="signup">Create Account</button>
+                </div>
+                <input type="email" id="authEmail" placeholder="Email address" class="input-field">
+                <input type="password" id="authPassword" placeholder="Password" class="input-field">
+                <p id="authSignupNote" style="display:none;font-size:0.82em;color:#888;margin-top:4px">You'll get a confirmation email. Check your inbox.</p>
+                <p id="authError" class="auth-error"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelAuthBtn" class="btn-secondary">Cancel</button>
+                <button id="submitAuthBtn" class="btn-primary">Sign In</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upgrade to Pro Modal -->
+    <div id="upgradeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⭐ Upgrade to Pro</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color:var(--text-secondary);margin-bottom:0.5rem">You've reached the free tier limit. Upgrade to unlock:</p>
+                <ul class="upgrade-features">
+                    <li>Cloud sync across all your devices</li>
+                    <li>AI voice parsing — no API key needed</li>
+                    <li>Unlimited sections &amp; lists</li>
+                    <li>Priority support</li>
+                </ul>
+                <div class="upgrade-price" id="upgradePrice"></div>
+            </div>
+            <div class="modal-footer" style="flex-direction:column;gap:0.5rem">
+                <button id="upgradeBtn" class="btn-upgrade">Upgrade Now</button>
+                <button id="cancelUpgradeBtn" class="btn-secondary" style="width:100%">Maybe later</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
     <script src="storage.js"></script>
     <script src="speech.js"></script>
     <script src="ai-brain.js"></script>
     <script src="voice-assistant.js"></script>
     <script src="llm-service.js"></script>
+    <script src="auth.js"></script>
+    <script src="sync.js"></script>
     <script src="app.js"></script>
     <script>
       if ('serviceWorker' in navigator) {

@@ -1396,3 +1396,169 @@ textarea.input-field {
     font-style: italic;
     min-height: 0;
 }
+
+/* ================================================================
+   Auth & Pro UI
+   ================================================================ */
+
+.btn-auth {
+    padding: 0.45rem 1rem;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-auth:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-auth.is-pro {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    border-color: transparent;
+    color: white;
+}
+
+/* Auth modal tabs */
+.auth-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 0.65rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+}
+
+.auth-tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.auth-error {
+    color: var(--danger-color);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+.auth-error.visible {
+    display: block;
+}
+
+/* Upgrade modal */
+.upgrade-features {
+    list-style: none;
+    margin: 0.75rem 0;
+}
+
+.upgrade-features li {
+    padding: 0.45rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.92rem;
+}
+
+.upgrade-features li::before {
+    content: '✓';
+    color: var(--success-color);
+    font-weight: bold;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.upgrade-price {
+    text-align: center;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0.75rem 0;
+}
+
+.upgrade-price span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.btn-upgrade {
+    width: 100%;
+    padding: 0.85rem;
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-upgrade:hover {
+    opacity: 0.9;
+}
+
+/* Trial banner */
+.trial-banner {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 0.6rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.88rem;
+    flex-wrap: wrap;
+}
+
+.trial-banner span {
+    flex: 1;
+    font-weight: 500;
+}
+
+.trial-upgrade-btn {
+    background: white;
+    color: #667eea;
+    border: none;
+    border-radius: 20px;
+    padding: 0.35rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+}
+
+.trial-upgrade-btn:hover {
+    opacity: 0.85;
+}
+
+.trial-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0.7;
+    padding: 0 0.25rem;
+}
+
+.trial-close-btn:hover {
+    opacity: 1;
+}

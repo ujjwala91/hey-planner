@@ -45,6 +45,7 @@ class StorageManager {
     };
     this.data.tasks.push(newTask);
     this.saveData();
+    if (typeof sync !== "undefined") sync.syncTask(newTask);
     return newTask;
   }
 
@@ -58,6 +59,7 @@ class StorageManager {
         updatedAt: new Date().toISOString(),
       };
       this.saveData();
+      if (typeof sync !== "undefined") sync.syncTask(this.data.tasks[index]);
       return this.data.tasks[index];
     }
     return null;
@@ -67,6 +69,7 @@ class StorageManager {
   deleteTask(taskId) {
     this.data.tasks = this.data.tasks.filter((t) => t.id !== taskId);
     this.saveData();
+    if (typeof sync !== "undefined") sync.deleteTask(taskId);
   }
 
   // Get tasks by date (excludes tasks assigned to sections)
@@ -96,6 +99,7 @@ class StorageManager {
     };
     this.data.lists.push(newList);
     this.saveData();
+    if (typeof sync !== "undefined") sync.syncList(newList);
     return newList;
   }
 
@@ -108,6 +112,7 @@ class StorageManager {
         ...updates,
       };
       this.saveData();
+      if (typeof sync !== "undefined") sync.syncList(this.data.lists[index]);
       return this.data.lists[index];
     }
     return null;
@@ -118,6 +123,18 @@ class StorageManager {
     // Also delete all tasks in this list
     this.data.tasks = this.data.tasks.filter((t) => t.list !== listId);
     this.data.lists = this.data.lists.filter((l) => l.id !== listId);
+    this.saveData();
+    if (typeof sync !== "undefined") sync.deleteList(listId);
+  }
+
+  // Get raw data object (for cloud sync)
+  getRawData() {
+    return this.data;
+  }
+
+  // Replace all local data with cloud data
+  replaceData(data) {
+    this.data = { tasks: data.tasks || [], lists: data.lists || [], settings: this.data.settings || {} };
     this.saveData();
   }
 

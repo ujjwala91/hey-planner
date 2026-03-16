@@ -48,7 +48,11 @@ class LLMService {
   }
 
   async parseVoiceInput(rawTranscript, existingTasks = []) {
-    if (!this.isConfigured()) {
+    const userIsPro = typeof auth !== "undefined" && auth.isPro();
+    const hasLocalKey = this.isConfigured();
+
+    // Pro users use backend proxy; free users need their own key
+    if (!userIsPro && !hasLocalKey) {
       return null;
     }
 
@@ -106,14 +110,33 @@ Action guide:
 - Examples: "remind me to call doctor at 4pm" → type:reminder, title:"Call doctor", remindAt:"${today}T16:00". "remind me to buy groceries tomorrow" → type:reminder, title:"Buy groceries", remindAt:"<tomorrow>T09:00".`;
 
     try {
-      const response = await fetch(this.apiUrl, {
-        method: "POST",
-        headers: {
+      // Build request URL and headers depending on Pro status
+      let fetchUrl, fetchHeaders;
+      if (
+        userIsPro &&
+        typeof CONFIG !== "undefined" &&
+        CONFIG.supabaseUrl &&
+        CONFIG.supabaseUrl !== "YOUR_SUPABASE_URL"
+      ) {
+        const jwt = await auth.getJwt();
+        fetchUrl = `${CONFIG.supabaseUrl}/functions/v1/claude-proxy`;
+        fetchHeaders = {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}`,
+        };
+      } else {
+        fetchUrl = this.apiUrl;
+        fetchHeaders = {
           "Content-Type": "application/json",
           "x-api-key": this.apiKey,
           "anthropic-version": "2023-06-01",
           "anthropic-dangerous-direct-browser-access": "true",
-        },
+        };
+      }
+
+      const response = await fetch(fetchUrl, {
+        method: "POST",
+        headers: fetchHeaders,
         body: JSON.stringify({
           model: this.model,
           max_tokens: 400,
