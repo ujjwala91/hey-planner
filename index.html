@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Speech-to-Text Planner</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <h1>📝 My Planner</h1>
+            </div>
+            <div class="header-controls">
+                <button id="settingsBtn" class="btn-settings" title="Settings">⚙️</button>
+                <div class="date-display">
+                    <span id="currentDate"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="nav-section">
+                    <button class="nav-item active" data-view="home">
+                        <span class="icon">🏠</span>
+                        <span>Home</span>
+                    </button>
+                    <button class="nav-item" data-view="calendar">
+                        <span class="icon">📅</span>
+                        <span>Calendar</span>
+                    </button>
+                    <button class="nav-item" data-view="daily">
+                        <span class="icon">📋</span>
+                        <span>Daily Planner</span>
+                    </button>
+                </nav>
+
+                <div class="lists-section">
+                    <div class="section-header">
+                        <h3>My Sections</h3>
+                        <button id="addListBtn" class="icon-btn" title="Add New Section">+</button>
+                    </div>
+                    <div id="customLists" class="custom-lists">
+                        <!-- Custom lists will be added here dynamically -->
+                    </div>
+                </div>
+
+                <div class="lists-section">
+                    <div class="section-header">
+                        <h3>My Reminders</h3>
+                    </div>
+                    <div id="remindersList" class="custom-lists">
+                        <!-- Reminder items will be added here dynamically -->
+                    </div>
+                </div>
+
+                <!-- Progress Overview -->
+                <div class="progress-overview">
+                    <h4>Today's Progress</h4>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span id="completedCount">0</span> / <span id="totalCount">0</span> tasks
+                        <span id="progressPercent" class="percent">0%</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main View Area -->
+            <main class="view-container">
+                <!-- Home View -->
+                <div id="homeView" class="view active">
+                    <div class="view-header">
+                        <h2>Today's Overview</h2>
+                        <div class="quick-actions">
+                            <button id="quickAddBtn" class="btn-primary">
+                                <span class="icon">➕</span> Quick Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Week View -->
+                    <div class="week-view">
+                        <div class="week-header">
+                            <button id="prevWeek" class="nav-btn">←</button>
+                            <h3 id="weekRange"></h3>
+                            <button id="nextWeek" class="nav-btn">→</button>
+                        </div>
+                        <div id="weekContainer" class="week-container">
+                            <!-- Days will be generated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar View -->
+                <div id="calendarView" class="view">
+                    <div class="view-header">
+                        <h2>Calendar</h2>
+                        <div class="calendar-nav">
+                            <button id="prevMonth" class="nav-btn">←</button>
+                            <h3 id="calendarMonthYear"></h3>
+                            <button id="nextMonth" class="nav-btn">→</button>
+                        </div>
+                    </div>
+                    <div id="calendarContainer" class="calendar-container">
+                        <!-- Calendar will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Daily Planner View -->
+                <div id="dailyView" class="view">
+                    <div class="view-header">
+                        <h2>Daily Planner</h2>
+                        <input type="date" id="dailyDatePicker" class="date-picker">
+                    </div>
+                    <div id="dailyContainer" class="daily-container">
+                        <!-- Daily tasks will be shown here -->
+                    </div>
+                </div>
+
+                <!-- List View (for custom lists) -->
+                <div id="listView" class="view">
+                    <div class="view-header">
+                        <h2 id="listViewTitle">Section</h2>
+                        <div class="view-header-actions">
+                            <button id="editListBtn" class="btn-secondary">✏️ Edit</button>
+                            <button id="markListDoneBtn" class="btn-secondary">✅ Mark Done</button>
+                            <button id="pasteTasksBtn" class="btn-secondary">📋 Paste Tasks</button>
+                            <button id="deleteListBtn" class="btn-danger">Delete Section</button>
+                        </div>
+                    </div>
+                    <div id="listContainer" class="list-container">
+                        <!-- List tasks will be shown here -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Reminder Modal -->
+    <div id="reminderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="reminderModalTitle">Add Reminder</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="reminderTitle" placeholder="What to remind?" class="input-field">
+                <textarea id="reminderDescription" placeholder="Details (optional)" class="input-field"></textarea>
+                <label style="font-weight:600;margin-top:8px;display:block">Remind me at</label>
+                <input type="datetime-local" id="reminderDateTime" class="input-field">
+            </div>
+            <div class="modal-footer">
+                <button id="cancelReminderBtn" class="btn-secondary">Cancel</button>
+                <button id="saveReminderBtn" class="btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding Tasks -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Task</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="taskTitle" placeholder="Task title" class="input-field">
+                <textarea id="taskDescription" placeholder="Description (optional)" class="input-field"></textarea>
+                <input type="date" id="taskDate" class="input-field">
+                <select id="taskList" class="input-field">
+                    <option value="">Select a section (optional)</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelTaskBtn" class="btn-secondary">Cancel</button>
+                <button id="saveTaskBtn" class="btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Voice Input -->
+    <div id="voiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Voice Input</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="voice-status">
+                    <div id="voiceIndicator" class="voice-indicator"></div>
+                    <p id="voiceStatus">Click the microphone to start</p>
+                </div>
+                <button id="startVoiceBtn" class="btn-voice-large">
+                    <span class="icon">🎤</span>
+                </button>
+                <div id="voiceTranscript" class="voice-transcript"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelVoiceBtn" class="btn-secondary">Cancel</button>
+                <button id="processVoiceBtn" class="btn-primary" disabled>Add Tasks</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Adding Custom List -->
+    <div id="listModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Section</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="listName" placeholder="Section name" class="input-field">
+                <input type="text" id="listIcon" placeholder="Icon (emoji)" class="input-field" maxlength="2">
+            </div>
+            <div class="modal-footer">
+                <button id="cancelListBtn" class="btn-secondary">Cancel</button>
+                <button id="saveListBtn" class="btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paste Tasks Modal -->
+    <div id="pasteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Paste Tasks</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:0.85em;color:#666;margin-bottom:8px">Paste your list below — one task per line. Empty lines are skipped.</p>
+                <textarea id="pasteTasksInput" placeholder="Buy groceries&#10;Call dentist&#10;Finish report&#10;..." class="input-field" rows="10" style="font-family:inherit;resize:vertical"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelPasteBtn" class="btn-secondary">Cancel</button>
+                <button id="importPasteBtn" class="btn-primary">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label for="claudeApiKey" style="font-weight:600;margin-bottom:6px;display:block">Claude API Key</label>
+                <input type="password" id="claudeApiKey" placeholder="sk-ant-..." class="input-field">
+                <button id="testApiKeyBtn" class="btn-secondary" style="margin-top:8px;font-size:0.85em">🧪 Test API Key</button>
+                <span id="apiKeyStatus" style="margin-left:8px;font-size:0.85em"></span>
+                <p style="font-size:0.8em;color:#888;margin-top:4px">Get your key from <strong>console.anthropic.com</strong>. Stored locally only.</p>
+                <label for="voiceLocale" style="font-weight:600;margin-top:16px;margin-bottom:6px;display:block">Voice Recognition</label>
+                <select id="voiceLocale" class="input-field">
+                    <option value="en-IN">English (India)</option>
+                    <option value="en-US">English (US)</option>
+                    <option value="en-GB">English (UK)</option>
+                </select>
+                <p style="font-size:0.8em;color:#888;margin-top:4px">Indian English improves recognition for South Indian accents and slang.</p>
+                <label for="reminderInterval" style="font-weight:600;margin-top:16px;margin-bottom:6px;display:block">Reminder Interval</label>
+                <select id="reminderInterval" class="input-field">
+                    <option value="5">Every 5 minutes</option>
+                    <option value="10">Every 10 minutes</option>
+                    <option value="15">Every 15 minutes</option>
+                    <option value="30">Every 30 minutes</option>
+                    <option value="60">Every 1 hour</option>
+                    <option value="120">Every 2 hours</option>
+                    <option value="0">Off</option>
+                </select>
+                <p style="font-size:0.8em;color:#888;margin-top:4px">How often to show notifications for pending items in the 🔔 Reminders section.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="cancelSettingsBtn" class="btn-secondary">Cancel</button>
+                <button id="saveSettingsBtn" class="btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Voice Control -->
+    <div id="voiceFab" class="voice-fab" title="Click to start/stop always-on listening">
+        <div class="fab-status-ring"></div>
+        <span class="fab-icon">🎤</span>
+    </div>
+
+    <!-- Live Transcript Overlay -->
+    <div id="transcriptOverlay" class="transcript-overlay hidden">
+        <div class="transcript-header">
+            <span class="transcript-status-dot"></span>
+            <span id="transcriptStatusText">Listening...</span>
+            <button id="transcriptClose" class="transcript-close">&times;</button>
+        </div>
+        <div id="liveTranscript" class="live-transcript">
+            <span class="placeholder-text">Speak now...</span>
+        </div>
+        <div id="interimText" class="interim-text"></div>
+    </div>
+
+    <script src="storage.js"></script>
+    <script src="speech.js"></script>
+    <script src="ai-brain.js"></script>
+    <script src="voice-assistant.js"></script>
+    <script src="llm-service.js"></script>
+    <script src="app.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
+    </script>
+</body>
+</html>
