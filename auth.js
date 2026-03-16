@@ -16,18 +16,22 @@ class AuthManager {
     this.client.auth.onAuthStateChange(async (event, session) => {
       this.user = session?.user ?? null;
       if (this.user) {
-        await this._loadProfile();
+        try { await this._loadProfile(); } catch (e) { console.error('Profile load error:', e); }
       } else {
         this.profile = null;
       }
       this._notify();
     });
 
-    // Load existing session on page load
+    // Load existing session on page load — always notify so UI updates
     this.client.auth.getSession().then(({ data: { session } }) => {
       this.user = session?.user ?? null;
       if (this.user) {
-        this._loadProfile().then(() => this._notify());
+        this._loadProfile()
+          .then(() => this._notify())
+          .catch(() => this._notify());
+      } else {
+        this._notify();
       }
     });
   }
