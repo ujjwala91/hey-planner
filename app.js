@@ -84,6 +84,16 @@ class PlannerApp {
           await this.syncFromCloud();
         }
       });
+
+      // Directly check session on load and update button
+      supabaseClient.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          this.updateAuthUI(session.user, auth.profile);
+        } else {
+          this.updateAuthUI(null, null);
+        }
+      }).catch(e => console.error("getSession error:", e));
+
     } catch (e) {
       console.error("Supabase init error:", e);
     }
